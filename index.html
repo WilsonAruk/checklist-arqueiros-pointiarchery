@@ -44,6 +44,8 @@ input:focus,textarea:focus{outline:none;border-color:var(--orange)}
 .area .head .ok{font-size:13px;background:rgba(255,255,255,.22);padding:3px 9px;border-radius:20px;display:none}
 .area.done .head .ok{display:inline-block}
 .area .body{padding:12px 16px 16px}
+.area .head h3 .pt{display:block;font-family:Inter,sans-serif;text-transform:none;font-size:14px;font-weight:600;opacity:.95;letter-spacing:0}
+.desc{margin:2px 0 6px;font-size:14px;color:#555;background:#fff7f0;border-left:3px solid var(--orange);padding:8px 10px;border-radius:0 8px 8px 0}
 .chk{display:flex;gap:12px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--line);cursor:pointer}
 .chk:last-of-type{border-bottom:0}
 .chk input{width:22px;height:22px;margin:1px 0 0;accent-color:var(--orange);flex:none}
@@ -570,7 +572,7 @@ const AREAS = [
  {id:"ancoragem",nome:"Ancoragem",itens:["Minha mão encontra a referência facilmente.","Os pontos de contato aparecem de forma semelhante.","Não preciso procurar a posição movendo excessivamente a cabeça."],ex:[5,13,14],tp:2},
  {id:"mira",nome:"Mira",itens:["Aceito pequenas oscilações naturais.","Não permaneço tempo demais tentando congelar a mira.","Consigo manter uma referência visual consistente."],ex:[21,22,23,27,7],tp:null},
  {id:"soltura",nome:"Soltura",itens:["Minha mão permanece relativamente relaxada.","Evito criar movimentos exagerados.","A soltura parece consequência da execução."],ex:[16,18,15],tp:2},
- {id:"follow",nome:"Follow-through",itens:["Não desmonto a posição imediatamente.","Consigo finalizar antes de olhar o resultado.","Minha posição final aparece de forma natural."],ex:[17,8,40],tp:2},
+ {id:"follow",nome:"Follow-through",pt:"finalização após a soltura",desc:"Manter a posição e a continuidade do movimento depois que a flecha sai, sem desmontar o tiro.",itens:["Não desmonto a posição imediatamente.","Consigo finalizar antes de olhar o resultado.","Minha posição final aparece de forma natural."],ex:[17,8,40],tp:2},
  {id:"agrupamento",nome:"Agrupamento",itens:["Consigo observar o grupo antes de fazer ajustes.","Minhas séries estão ficando mais previsíveis.","Sei diferenciar agrupamento fechado de pontuação alta."],ex:[24,25,26,28,42,48],tp:3},
  {id:"ritmo",nome:"Ritmo e consistência",itens:["Minha rotina se mantém durante a sessão.","Não acelero depois de uma flecha ruim.","Consigo manter qualidade entre o início e o final."],ex:[6,29,31,32,37,39],tp:4},
  {id:"mental",nome:"Controle mental",itens:["Consigo fazer reset depois de um erro.","Não tento corrigir várias coisas ao mesmo tempo.","Sei qual é o foco técnico da sessão."],ex:[38,33,34,30,35,36],tp:4}
@@ -608,8 +610,9 @@ function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",
 const areasBox = document.getElementById("areas");
 AREAS.forEach((a,i)=>{
   const card = el("section",{class:"area",id:"a-"+a.id});
-  card.innerHTML = `<div class="head"><span class="num">${String(i+1).padStart(2,"0")}</span><h3>${a.nome}</h3><span class="ok">✓ avaliada</span></div>`;
+  card.innerHTML = `<div class="head"><span class="num">${String(i+1).padStart(2,"0")}</span><h3>${a.nome}${a.pt?` <small class="pt">“${a.pt}”</small>`:""}</h3><span class="ok">✓ avaliada</span></div>`;
   const body = el("div",{class:"body"});
+  if(a.desc) body.appendChild(el("p",{class:"desc"},a.desc));
   a.itens.forEach((t,j)=>{
     const lab = el("label",{class:"chk"});
     lab.innerHTML = `<input type="checkbox" data-a="${a.id}" data-j="${j}"><span>${t}</span>`;
@@ -739,13 +742,13 @@ function renderResult(R){
         </div>
         <p style="margin:14px 0 0">${R.perfil}</p>
       </div>
-      <div class="bars">${R.linhas.map(l=>`<div class="row ${l.id===f.id?"focus":""}"><span>${l.nome}</span><span class="tr"><i style="width:${l.nota*20}%;background:${COR[l.nota]}"></i></span><b>${l.nota}</b></div>`).join("")}</div>
+      <div class="bars">${R.linhas.map(l=>`<div class="row ${l.id===f.id?"focus":""}"><span>${l.nome}${l.pt?`<br><small style="color:var(--muted);font-weight:400">“${l.pt}”</small>`:""}</span><span class="tr"><i style="width:${l.nota*20}%;background:${COR[l.nota]}"></i></span><b>${l.nota}</b></div>`).join("")}</div>
     </div>
   </section>
 
   <section class="focus-card">
     <div class="lbl">SEU PRÓXIMO FOCO</div>
-    <h2>${f.nome}</h2>
+    <h2>${f.nome}</h2>${f.pt?`<div style="font-weight:600;margin:-4px 0 8px">“${f.pt}”</div>`:""}${f.desc?`<p class="note" style="margin:0 0 8px">${f.desc}</p>`:""}
     <div><span class="pill" style="background:${COR[f.nota]}">Nota ${f.nota} — ${NIVEL[f.nota]}</span></div>
     ${R.empatadas>1 && !R.allEqualHigh ? `<p class="note">Outras áreas também tiveram nota ${f.nota}. ${f.nome} foi escolhida porque tem menos itens marcados ou vem antes na sequência técnica — corrigir a base costuma melhorar o que vem depois.</p>`:""}
     ${R.allEqualHigh ? `<p class="note">Sua técnica está equilibrada e consistente. Use este foco como manutenção e inclua desafios: Ex. 44 Alvo reduzido (p. ${pag(44)}), Ex. 43 Alternância de distâncias (p. ${pag(43)}) e Ex. 49 Precisão progressiva (p. ${pag(49)}).</p>`:""}
@@ -754,7 +757,7 @@ function renderResult(R){
   </section>
 
   ${R.segundo?`<section class="sec-card"><div class="lbl">PRÓXIMO DA FILA (depois que o foco principal estabilizar)</div>
-    <div style="font-weight:700;font-size:18px;margin-top:4px">${R.segundo.nome} <span class="pill" style="background:${COR[R.segundo.nota]};vertical-align:middle">Nota ${R.segundo.nota}</span></div>
+    <div style="font-weight:700;font-size:18px;margin-top:4px">${R.segundo.nome}${R.segundo.pt?` “${R.segundo.pt}”`:""} <span class="pill" style="background:${COR[R.segundo.nota]};vertical-align:middle">Nota ${R.segundo.nota}</span></div>
     <div class="note" style="margin-top:4px">Exercícios: ${R.segundo.ex.slice(0,3).map(n=>`Ex. ${String(n).padStart(2,"0")} ${EXERCICIOS[n]} (p. ${pag(n)})`).join(" · ")}</div></section>`:""}
 
   <section class="panel">
@@ -860,14 +863,16 @@ function gerarPDF(R){
   const fl = f.faltando.length? f.faltando : ["Todos os itens marcados — buscar mais repetibilidade."];
   const flLines = fl.map(t=>doc.splitTextToSize("• "+t, W-2*M-10));
   const flH = flLines.reduce((s,a)=>s+a.length*4.3,0);
-  const boxH = 26 + flH + (f.alerta?6:0);
+  const extra = f.pt?5:0;
+  const boxH = 26 + flH + extra + (f.alerta?6:0);
   doc.setDrawColor(215,38,30); doc.setLineWidth(.8); doc.setFillColor(255,247,243);
   doc.roundedRect(M,y,W-2*M,boxH,3,3,"FD");
   doc.setTextColor(215,38,30); doc.setFont("helvetica","bold"); doc.setFontSize(8.5); doc.text("PRÓXIMO FOCO (PRIORIDADE)",M+5,y+6);
   doc.setTextColor(21); doc.setFontSize(16); doc.text(f.nome.toUpperCase(),M+5,y+13);
-  doc.setFontSize(9.5); doc.setTextColor(...hex(COR[f.nota])); doc.text(`Nota ${f.nota} — ${NIVEL[f.nota]}`,M+5,y+18.5);
+  if(f.pt){ doc.setFont("helvetica","normal"); doc.setFontSize(9.5); doc.setTextColor(60); doc.text(`"${f.pt}" — manter a posição depois que a flecha sai, sem desmontar o tiro.`,M+5,y+18.5); doc.setFont("helvetica","bold"); }
+  doc.setFontSize(9.5); doc.setTextColor(...hex(COR[f.nota])); doc.text(`Nota ${f.nota} — ${NIVEL[f.nota]}`,M+5,y+18.5+extra);
   doc.setFont("helvetica","normal"); doc.setTextColor(40); doc.setFontSize(9.5);
-  let yy=y+24.5;
+  let yy=y+24.5+extra;
   flLines.forEach(ls=>{ doc.text(ls,M+5,yy); yy+=ls.length*4.3; });
   if(f.alerta){ doc.setTextColor(150,100,0); doc.setFontSize(8.5); doc.text("Atenção: "+f.alerta,M+5,yy+1); }
   y+=boxH+5;
@@ -894,7 +899,7 @@ function gerarPDF(R){
   if(R.segundo){
     doc.setFont("helvetica","bold"); doc.setFontSize(9.5); doc.setTextColor(242,106,27);
     doc.text("PRÓXIMO DA FILA: ",M,y); const w=doc.getTextWidth("PRÓXIMO DA FILA: ");
-    doc.setTextColor(30); doc.text(`${R.segundo.nome} (nota ${R.segundo.nota})`,M+w,y);
+    doc.setTextColor(30); doc.text(`${R.segundo.nome}${R.segundo.pt?` "${R.segundo.pt}"`:""} (nota ${R.segundo.nota})`,M+w,y);
     doc.setFont("helvetica","normal"); doc.setFontSize(8.6); doc.setTextColor(80);
     const t=doc.splitTextToSize("Exercícios: "+R.segundo.ex.slice(0,3).map(n=>`Ex. ${String(n).padStart(2,"0")} ${EXERCICIOS[n]} (p. ${pag(n)})`).join(" · "),W-2*M);
     doc.text(t,M,y+4.5); y+=5+t.length*3.9+2;
